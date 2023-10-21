@@ -1,22 +1,28 @@
 // @ts-check
-const {
-  kFormatter,
+import { Card } from "../common/Card.js";
+import { I18n } from "../common/I18n.js";
+import { icons } from "../common/icons.js";
+import {
   encodeHTML,
-  getCardColors,
   flexLayout,
-  wrapTextMultiline,
+  getCardColors,
+  kFormatter,
   measureText,
   parseEmojis,
-} = require("../common/utils");
-const I18n = require("../common/I18n");
-const Card = require("../common/Card");
-const icons = require("../common/icons");
-const { repoCardLocales } = require("../translations");
+  wrapTextMultiline,
+  iconWithLabel,
+  createLanguageNode,
+} from "../common/utils.js";
+import { repoCardLocales } from "../translations.js";
+
+const ICON_SIZE = 16;
 
 /**
- * @param {string} label
- * @param {string} textColor
- * @returns {string}
+ * Retrieves the repository description and wraps it to fit the card width.
+ *
+ * @param {string} label The repository description.
+ * @param {string} textColor The color of the text.
+ * @returns {string} Wrapped repo description SVG object.
  */
 const getBadgeSVG = (label, textColor) => `
   <g data-testid="badge" class="badge" transform="translate(320, -18)">
@@ -34,42 +40,16 @@ const getBadgeSVG = (label, textColor) => `
 `;
 
 /**
- * @param {string} langName
- * @param {string} langColor
- * @returns {string}
+ * @typedef {import("../fetchers/types").RepositoryData} RepositoryData Repository data.
+ * @typedef {import("./types").RepoCardOptions} RepoCardOptions Repo card options.
  */
-const createLanguageNode = (langName, langColor) => {
-  return `
-  <g data-testid="primary-lang">
-    <circle data-testid="lang-color" cx="0" cy="-5" r="6" fill="${langColor}" />
-    <text data-testid="lang-name" class="gray" x="15">${langName}</text>
-  </g>
-  `;
-};
-
-const ICON_SIZE = 16;
-const iconWithLabel = (icon, label, testid) => {
-  if (label <= 0) return "";
-  const iconSvg = `
-    <svg
-      class="icon"
-      y="-12"
-      viewBox="0 0 16 16"
-      version="1.1"
-      width="${ICON_SIZE}"
-      height="${ICON_SIZE}"
-    >
-      ${icon}
-    </svg>
-  `;
-  const text = `<text data-testid="${testid}" class="gray">${label}</text>`;
-  return flexLayout({ items: [iconSvg, text], gap: 20 }).join("");
-};
 
 /**
- * @param {import('../fetchers/types').RepositoryData} repo 
- * @param {Partial<import("./types").RepoCardOptions>} options 
- * @returns {string}
+ * Renders repository card details.
+ *
+ * @param {RepositoryData} repo Repository data.
+ * @param {Partial<RepoCardOptions>} options Card options.
+ * @returns {string} Repository card SVG object.
  */
 const renderRepoCard = (repo, options = {}) => {
   const {
@@ -88,7 +68,7 @@ const renderRepoCard = (repo, options = {}) => {
     icon_color,
     text_color,
     bg_color,
-    show_owner,
+    show_owner = false,
     theme = "default_repocard",
     border_radius,
     border_color,
@@ -131,8 +111,18 @@ const renderRepoCard = (repo, options = {}) => {
 
   const totalStars = kFormatter(starCount);
   const totalForks = kFormatter(forkCount);
-  const svgStars = iconWithLabel(icons.star, totalStars, "stargazers");
-  const svgForks = iconWithLabel(icons.fork, totalForks, "forkcount");
+  const svgStars = iconWithLabel(
+    icons.star,
+    totalStars,
+    "stargazers",
+    ICON_SIZE,
+  );
+  const svgForks = iconWithLabel(
+    icons.fork,
+    totalForks,
+    "forkcount",
+    ICON_SIZE,
+  );
 
   const starAndForkCount = flexLayout({
     items: [svgLanguage, svgStars, svgForks],
@@ -167,11 +157,11 @@ const renderRepoCard = (repo, options = {}) => {
   return card.render(`
     ${
       isTemplate
-        // @ts-ignore
-        ? getBadgeSVG(i18n.t("repocard.template"), colors.textColor)
+        ? // @ts-ignore
+          getBadgeSVG(i18n.t("repocard.template"), colors.textColor)
         : isArchived
-        // @ts-ignore
-        ? getBadgeSVG(i18n.t("repocard.archived"), colors.textColor)
+        ? // @ts-ignore
+          getBadgeSVG(i18n.t("repocard.archived"), colors.textColor)
         : ""
     }
 
@@ -185,4 +175,5 @@ const renderRepoCard = (repo, options = {}) => {
   `);
 };
 
-module.exports = renderRepoCard;
+export { renderRepoCard };
+export default renderRepoCard;
